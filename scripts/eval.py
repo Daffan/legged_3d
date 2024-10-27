@@ -34,34 +34,17 @@ def load_policy(logdir):
     return policy
 
 
-
-def load_policy(logdir, env, device='cuda:0', old_ppo=False):
-    if old_ppo:
-        from go1_gym_learn.ppo_cse import ActorCritic
-        actor_critic = ActorCritic(env.num_obs,
-                                    env.num_privileged_obs,
-                                    env.num_obs_history,
-                                    env.num_actions,
-                                    ).to(device)
-        weights = torch.load(os.path.join(logdir, "checkpoints", "ac_weights.pt"), map_location=device)
-        actor_critic.load_state_dict(state_dict=weights)
-        def policy(obs, info={}):
-            return actor_critic.act(obs["obs_history"])
-    else:
-        from go1_gym_learn.ppo_cse_cnn import ActorCritic, AC_Args
-        AC_Args.use_cnn = True
-        AC_Args.use_gru = False
-        actor_critic = ActorCritic(env.num_obs,
-                                    env.num_privileged_obs,
-                                    env.num_obs_history,
-                                    env.num_actions,
-                                    ac_args=AC_Args
-                                    ).to(device)
-
-        weights = torch.load(os.path.join(logdir, "checkpoints", "ac_weights.pt"), map_location=device)
-        actor_critic.load_state_dict(state_dict=weights)
-        def policy(obs, info={}):
-            return actor_critic.act(obs["obs_history"])
+def load_policy(logdir, env, device='cuda:0'):
+    from go1_gym_learn.ppo_cse import ActorCritic
+    actor_critic = ActorCritic(env.num_obs,
+                                env.num_privileged_obs,
+                                env.num_obs_history,
+                                env.num_actions,
+                                ).to(device)
+    weights = torch.load(os.path.join(logdir, "checkpoints", "ac_weights.pt"), map_location=device)
+    actor_critic.load_state_dict(state_dict=weights)
+    def policy(obs, info={}):
+        return actor_critic.act(obs["obs_history"])
     
     return policy
 
@@ -203,7 +186,6 @@ if __name__ == '__main__':
     parser.add_argument("--headless", action="store_true")
     parser.add_argument("--device", default=0, type=int)
     parser.add_argument("--logdir", type=str, default=LOAD_PATH)
-    parser.add_argument("--old_ppo", action="store_true")
     args = parser.parse_args()
 
     play_go1(args)
